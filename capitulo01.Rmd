@@ -2,31 +2,27 @@
 author: "Nombre Completo Autor"
 date: "27/10/2017"
 documentclass: book
-forprint: true  # true: imprime a dos caras, false: libro digital
-fontsize: 12pt # 10pt,11pt
-geometry: margin = 2.5cm 
-bibliography: ["bib/library.bib", "bib/paquetes.bib"]
-# metodobib -> true: natbib (descomentar: citation_package: natbib) 
-#           -> false: pandoc (comentar: citation_package: natbib)
-metodobib: true
-#natbib: plainnat, abbrvnat, unsrtnat
-biblio-style: "plainnat"
-#Método 2 (pandoc): descomente una línea de las 2 siguientes en caso de usarlo
-csl: methods-in-ecology-and-evolution.csl      # no numera mejor en las citas
-#csl: acm-sig-proceedings-long-author-list.csl  # numera peor en las citas
+forprint: yes
+fontsize: 12pt
+geometry: margin = 2.5cm
+bibliography:
+- bib/library.bib
+- bib/paquetes.bib
+- bib/articulos.bib
+metodobib: yes
+biblio-style: plainnat
+csl: acm-sig-proceedings-long-author-list.csl
 link-citations: yes
-output: 
+output:
+  html_document:
+    df_print: paged
   pdf_document:
     keep_tex: no
     number_sections: yes
-    citation_package: natbib  # comentado usa: pandoc-citeproc
-    #toc: yes
+    citation_package: natbib
     fig_caption: yes
     template: latex/templateMemoriaTFE.tex
-    includes:
-      #before_body: portadas/latex_paginatitulo_modTFE.tex
-      #in_header: latex/latex_preambulo.tex
-      #after_body: latex/latex_antes_enddoc.tex
+    includes: null
 ---
 
 
@@ -72,4 +68,25 @@ knitr::opts_chunk$set(fig.path = 'figurasR/',
 
 # Título del Capítulo
 
+Revisión de la literatura científica específica del voleibol genérica aplicada a otros deportes. Aplicabilidad por estructura de la información disponible para el voleibol
+
 ## Primera sección
+
+**Intro**
+
+*En el voleibol, como en el resto de deportes, la estadística juega un papel muy importante a la hora de evaluar el rendimiento de un equipo. En los siguientes artículos podemos ver algunos modelos que estudian este rendimiento en función de las características de los jugadores que conforman el equipo o los elementos técnicos tácticos realizados por estos. *
+
+La aplicación de la estadística al deporte tiene como objetivo principal analizar el rendimiento de un jugador o de un equipo, con el fin de reducir los errores que se producen a lo largo de un partido. Gracias a esto, también podemos hacer una estimación de la probabilidad que tiene un equipo de ganar un partido o de ganar una liga.
+
+En voleibol hay muchos elementos técnicos tácticos que pueden ser objeto de estudio. De cada uno de ellos se suele realizar un análisis acerca de las posibles situaciones de fallo o acierto de ejecución para construir variables y poder iniciar el estudio.
+
+En el artículo @marelic1998influence **CITAR NUMERO** se investigó la influencia de 5 elementos técnicos tácticos: bloqueo, defensa, saque, recepción del saque y remate, en la puntuación de un determinado partido. A partir de un modelo de regresión, se pudo ver qué elementos influían en mayor medida para que un equipo ganase un partido. 
+
+Los jugadores de voleibol se distinguen por su posición en el campo. Principalmente, podemos distinguir las siguientes: colocador, receptor, bloqueador y líbero. En función de la acción en la que se encuentre el equipo (recepción o defensa) estas posiciones se vuelven algo más específicas.
+Puesto que uno de los objetivos principales de utilizar la estadística en este deporte es llegar a construir un modelo que mida la eficacia de los jugadores de un equipo, podemos construir las variables de estudio en función de la posición de cada uno. De esta forma, se han utilizado también ciertos modelos estadísticos para estudiar el resultado de un partido a partir de esas variables.
+
+En la Liga Turca se aplicó un estudio de este tipo distinguiendo entre hombres y mujeres, en función de las posiciones de los jugadores en el campo. Se determinó que los resultados de los partidos se explicaban bien a través de este modelo de eficacia y dos años más tarde se confirmó la fiabilidad y validez de este estudio. @akarccecsme2017possible  **CITAR NUMERO**
+
+
+
+
