@@ -32,7 +32,8 @@ output:
 nocite: | 
   @Luque2017,@Luque2019,@RStudio,@R-base,
   @R-knitr,@R-rmarkdown,@R-dplyr,@R-ggplot2,@Techopedia,
-  @marelic1998influence, @akarccecsme2017possible
+  @marelic1998influence, @akarccecsme2017possible,@sanjurjo2015analisis,
+  @gabrio2021bayesian
 ...
 
 
@@ -202,6 +203,6 @@ install.packages(c("ggplot2","kableExtra","dplyr"))
 <!-- \nocite{*} -->
 \nocite{Luque2017,Luque2019,RStudio,R-base,
 R-knitr,R-rmarkdown,R-dplyr,R-ggplot2,Techopedia,
-marelic1998influence,akarccecsme2017possible}
+marelic1998influence,akarccecsme2017possible,sanjurjo2015analisis,gabrio2021bayesian}
 
 \fi 
