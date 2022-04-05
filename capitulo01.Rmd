@@ -66,22 +66,26 @@ knitr::opts_chunk$set(fig.path = 'figurasR/',
 \renewcommand{\footrulewidth}{0.4pt}
 
 
-# Título del Capítulo
+# Capítulo 1
 
 *Revisión de la literatura científica específica del voleibol genérica aplicada a otros deportes. Aplicabilidad por estructura de la información disponible para el voleibol*
 
-## Primera sección
+## La estadística en el deporte
 
 La estadística es una disciplina que, a día de hoy, está presente en cualquier aspecto de nuestra vida. Todo a nuestro alrededor puede ser objeto de estudio. Estos estudios se realizan con el fin de obtener datos y conclusiones para poder conocer mejor nuestro entorno y hacernos la vida más fácil. Una de las aplicaciones de la estadística que en los últimos años ha tenido una gran relevancia es la estadística deportiva. 
 
-La aplicación de la estadística al deporte tiene como objetivo principal analizar el rendimiento de un jugador o de un equipo, con el fin de reducir los errores que se producen a lo largo de un partido. Gracias a esto, los entrenadores y cuerpos técnicos pueden llegar a cambiar la eficiencia de sus equipos. 
-En la actualidad, todos los deportes se mueven por sus estadísticas, ya que es una forma de hacer que los aficionados estén al tanto del rendimiento de sus equipos. 
+La aplicación de la estadística al deporte tiene como objetivo principal analizar el rendimiento de un jugador o de un equipo, con el fin de reducir los errores que se producen a lo largo de un partido. Así nació lo que se conoce actualmente como *Sports Analytics*, una serie de estadísticas que proporcionan una ventaja competitiva a un equipo o individuo. Para poder elaborarlas, se utilizan métodos estadísticos que, además de ayudar a la recogida y organización de los datos en el desarrollo de los entrenamientos permiten a los entrenadores y cuerpos técnicos conocer si se han cumplido o no los objetivos planteados y así modificar el rendimiento de sus equipos. 
 
-Una forma de poder determinar si un equipo o un jugador va a ganar o perder un partido es aplicando modelos estadísticos a datos recogidos de partidos anteriores. En el artículo @sanjurjo2015analisis se aplicó un modelo de regresión logística multivariable a una serie de partidos de fútbol, con el objetivo de saber si es posible predecir el resultado de transiciones ofensivas durante un partido. Se concluyó que, además de ser capaz de predecir ese resultado, también se pudo determinar qué variables influían más en estas predicciones.
+Todo esto es una forma de hacer que los aficionados estén al tanto de ese rendimiento por parte de los equipos. Con la cantidad de avances tecnológicos que se han desarrollado en los últimos años, se puede llegar a predecir todo tipo de eventos que podrían ocurrir en el mundo deportivo. Estos avances han ayudado a profundizar en otros ámbitos importantes relacionados con el deporte, tales como la salud, para la prevención de lesiones, marketing, para la elaboración de estrategias de comunicación más eficaces, e incluso en las casas de apuestas, para la construcción de modelos predictivos que utilizan para sus ofertas. 
 
-Al igual que en el fútbol, se han estudiado modelos estadísticos en otros deportes como el voleibol. El voleibol es un deporte de equipo, en el que juegan 6 jugadores y cuyo objetivo es que pasar el balón por encima de la red para conseguir que caiga en el suelo del campo contrario. De aquí podríamos sacar datos sobre jugadores, equipos completos e incluso sobre las ligas de cada país, para construir modelos que predigan el resultado de un punto o de un partido.
 
-En voleibol hay muchos elementos técnicos tácticos que pueden ser objeto de estudio. De cada uno de ellos se puede realizar un análisis acerca de las posibles situaciones de fallo o acierto de ejecución, y con esos datos construir variables y poder iniciar un estudio.
+## Estado del arte
+
+Como hemos comentado antes, una forma de poder determinar si un equipo o un jugador va a ganar o perder un partido es aplicando modelos estadísticos a datos recogidos de experiencias anteriores, en este caso, de partidos ya finalizados. En el artículo @sanjurjo2015analisis se aplicó un modelo de regresión logística multivariable a una serie de partidos de fútbol, con el objetivo de saber si es posible predecir el resultado de transiciones ofensivas durante un partido. Se concluyó que, además de ser capaz de predecir ese resultado, también se pudo determinar qué variables influían más en estas predicciones.
+
+Al igual que en el fútbol, se han estudiado modelos estadísticos en otros deportes como el voleibol. El voleibol es un deporte de equipo, en el que juegan 6 jugadores y cuyo objetivo es pasar el balón por encima de la red para conseguir que caiga en el suelo del campo contrario. De aquí podríamos sacar datos sobre jugadores, equipos completos e incluso sobre las ligas de cada país, para construir modelos que predigan el resultado de un punto o de un partido.
+
+En voleibol hay muchos elementos técnicos tácticos que pueden ser objeto de estudio. De cada uno de ellos se puede realizar un análisis acerca de las posibles situaciones de fallo o acierto de ejecución, y con esos datos, construir variables y poder iniciar un estudio.
 
 En el artículo @marelic1998influence se investigó la influencia de 5 elementos técnicos tácticos: bloqueo, defensa, saque, recepción del saque y remate, en la puntuación de un determinado partido. A partir de un modelo de regresión, se pudo ver qué elementos influían en mayor medida para que un equipo ganase un partido. 
 

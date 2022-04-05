@@ -13,8 +13,6 @@ biblio-style: plainnat
 csl: acm-sig-proceedings-long-author-list.csl
 link-citations: yes
 output:
-  html_document:
-    df_print: paged
   pdf_document:
     keep_tex: no
     number_sections: yes
@@ -23,6 +21,8 @@ output:
     template: latex/templateMemoriaTFE.tex
     includes:
       before_body: portadas/latex_paginatitulo_modTFDGME.tex
+  html_document:
+    df_print: paged
 ---
 
 <!-- Si "metodobib: false", modificar este "nocite:"  -->
@@ -30,8 +30,6 @@ output:
 
 ---
 nocite: | 
-  @Luque2017,@Luque2019,@RStudio,@R-base,
-  @R-knitr,@R-rmarkdown,@R-dplyr,@R-ggplot2,@Techopedia,
   @marelic1998influence, @akarccecsme2017possible,@sanjurjo2015analisis,
   @gabrio2021bayesian
 ...
@@ -201,8 +199,7 @@ install.packages(c("ggplot2","kableExtra","dplyr"))
 <!-- Si "metodobib: false", modificar el "nocite:" del inicio de este fichero  -->
 
 <!-- \nocite{*} -->
-\nocite{Luque2017,Luque2019,RStudio,R-base,
-R-knitr,R-rmarkdown,R-dplyr,R-ggplot2,Techopedia,
+\nocite{
 marelic1998influence,akarccecsme2017possible,sanjurjo2015analisis,gabrio2021bayesian}
 
 \fi 
