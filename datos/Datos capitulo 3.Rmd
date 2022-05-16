@@ -1,0 +1,818 @@
+---
+title: "Datos Capitulo 3"
+author: "Ana Solís García"
+date: "20/4/2022"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Datos de la Liga Iberdrola 2020/2021 (<https://rfevb-web.dataproject.com/CompetitionHome.aspx?ID=68>)
+
+# Liga Iberdrola 2020/2021
+
+```{r}
+library(readxl)
+partidos2021 = read_excel("Partidos_20_21.xlsx", sheet = 1, range= "A2:AA266", col_names=T)
+head(partidos2021)
+```
+
+## Estudio descriptivo de los datos
+
+```{r}
+str(partidos2021)
+```
+
+Primero cambiamos la variable *Ganado/Perdido* a una variable dicotómica de tipo factor con valores 0 y 1 correspondientes a si el equipo ha perdido o ha ganado el partido.
+
+```{r}
+partidos2021$`Ganado/Perdido` = as.factor(partidos2021$`Ganado/Perdido`)
+str(partidos2021)
+```
+
+```{r}
+dim(partidos2021)
+summary(partidos2021)
+```
+
+## Estudio de las variables
+
+Finalmente, tenemos una base de datos con las estadísticas correspondientes a los partidos de la fase regular en los que participaron los 12 equipos de la liga. Está compuesta por 264 registros con 27 variables. Las variables con las que se ha trabajado en este estudio son las siguientes:
+
+-   Variables cuantitativas discretas
+
+    -   Sets jugados
+
+    -   Tot (puntos totales ganados en el partido)
+
+    -   BP
+
+    -   G
+
+    -   G-P
+
+    -   Saque-Tot
+
+    -   Saque-Pts
+
+    -   Saque-Err
+
+    -   Recep-Tot
+
+    -   Recep-Err
+
+    -   Recep-Neg
+
+    -   Recep-Exc
+
+    -   Ataque-Tot
+
+    -   Ataque-Err
+
+    -   Ataque-Blo
+
+    -   Ataque-Exc
+
+    -   Bloqueo-Red
+
+    -   Bloqueo-Pts
+
+-   Variables cuantitativas continuas
+
+    -   Saque-Pts por set
+
+    -   Saque-Efic
+
+    -   Recep-Exc%: porcentaje de recepciones perfectas con respecto al total.
+
+    -   Recep-Efic: diferencia entre el número de recepciones perfectas y el número de recepciones falladas con respecto al total de recepciones en porcentaje.
+
+    -   Ataque-Exc%: porcentaje de ataques perfectos.
+
+    -   Ataque-Efic: diferencia entre el número de ataques perfectos y el número de ataques fallados y bloqueados con respecto al total de recepciones en porcentaje.
+
+    -   Bloqueo-Pts por set
+
+-   Variables cualitativas discretas
+
+    -   Equipo
+
+    -   Ganado/Perdido
+
+# VARIABLES SELECCIONADAS
+
+```{r}
+dat = partidos2021[,c(1:2,4:5,7:9,12:15,18:21,24:25,27)]
+str(dat)
+```
+
+### Gráficos y análisis de las variables
+
+#### Boxplot
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+
+# CAMBIAMOS A FORMATO LARGO PARA HACER BOXPLOT DE LAS VARIABLES
+partidos_boxplot1 = dat[,c(2:9)] %>% 
+  pivot_longer(names_to = "Variables",
+               values_to = "Valores", cols=everything())
+head(partidos_boxplot1)
+partidos_boxplot2 = dat[,c(10:17)] %>% 
+  pivot_longer(names_to = "Variables",
+               values_to = "Valores", cols=everything())
+head(partidos_boxplot2)
+```
+
+```{r}
+boxplot(dat[,2:9])
+partidos_boxplot1 %>% 
+  ggplot(aes(x=`Variables` , y=Valores)) +
+  geom_boxplot() +
+  labs( 
+    title="Boxplot de 8 variables",
+    x="Categorias",
+    y="Valores")
+```
+
+```{r}
+boxplot(dat[,10:17])
+partidos_boxplot2 %>% 
+  ggplot(aes(x=Variables , y=Valores)) +
+  geom_boxplot() +
+  labs( 
+    title="Boxplot de 8 variables siguientes",
+    x="Categorias",
+    y="Valores")
+```
+
+```{r}
+boxplot(dat[c("Recep-Err","Saque-Err", "Ataque-Blo" ,"Recep-Neg")])
+```
+
+```{r}
+boxplot(dat[c("Saque-Pts","Bloqueo-Pts","Recep-Exc")])
+```
+
+Para ambos análisis podemos encontrar variables que presentan valores 'outliers', los cuales podrían afectar a nuestro estudio.
+
+#### Matriz varianzas y correlaciones
+
+Analizamos ahora la matriz de varianzas/covarianzas y la matriz de correlaciones para ver qué variables pueden verse afectadas por los valores de otras.
+
+```{r}
+var(dat[,c(2:17)]) 
+```
+
+```{r}
+cor = cor(dat[,2:17])
+round(cor,3)
+```
+
+Para ver si hay variables explicativas que se encuentren muy correlacionadas realizamos el determinante de la matriz de correlaciones
+
+```{r}
+det(cor)
+```
+
+Tiene un valor muy próximo a cero luego eso significa que hay variables en las que existe una alta correlación entre ellas.
+
+```{r}
+heatmap(cor)
+```
+
+```{r}
+# variables mas correlacionadas
+variables = colnames(dat[,2:17])
+correlacionMax=0.85
+corAltas = matrix (ncol = 3)
+cor[lower.tri(cor)] <- NA #pasamos a una matriz triangular superior para que no nos salgan pares repetidos
+for (i in 1:dim(cor)[1]){
+    for (j in 1:dim(cor)[2]){
+        if (is.na(cor[j,i]) && abs(cor[i,j])>correlacionMax && cor[i,j]<1){
+          corAltas = rbind(corAltas, c(variables[i],variables[j],round(cor[i,j],4)))
+        }
+    }
+}
+(paresVariables = as.data.frame(corAltas[-1,]))
+library(knitr)
+library(kableExtra)
+kable(paresVariables, booktabs = T) %>% # , format = "latex"
+kable_styling(latex_options = c( "scale_down"))
+```
+
+Esto puede indicar que existe un problema de multicolinealidad, en el que hay variables que me aportan información similar, luego esto puede dar lugar a interpretaciones erróneas. Para ello puede ser de gran ayuda un análisis de componentes principales.
+
+### Análisis de componentes principales
+
+*Objetivo central del Análisis de Comp. Principales (ACP): reducir la dimensión de un conjunto de datos, descritos por un número elevado de variables aleatorias interrelacionadas entre sí, reteniendo tanto como sea posible la variación que presenta dicho conjunto de datos. Se trata de explicar la estructura de varianzas y covarianzas del conjunto de variables a través de otro conjunto de variables, con un cardinal considerablemente menor que el primero. Así se podrá reducir dimensión, además de interpretar los datos*
+
+Su construcción no requiere supuesto de normalidad. No obstante, en poblaciones normales se pueden realizar tests de hipótesis y proporcionan interpretaciones útiles de los elipsoides de densidad constante.
+
+```{r}
+cor =cor(dat[,2:17])
+acp = princomp(dat[,2:17], cor=TRUE) #cor=TRUE variables tipificadas ya que las escalas son muy distintas
+summary(acp)
+```
+
+```{r}
+# grafico de sedimentacion
+plot(acp, col="blue", main = "Componentes principales")
+abline(h=mean(eigen(cor)$values), lwd=2,lty=2, col="red")
+```
+
+```{r}
+resumen<- matrix(NA,nrow=length(acp$sdev),ncol=3)
+resumen[,1]<-  acp$sdev^2 # eigen(cor)$values
+resumen[,2]<- 100*resumen[,1]/sum(resumen[,1])
+resumen[,3]<- cumsum(resumen[,2])
+colnames(resumen)<- c("Autovalor","Porcentaje",
+                      "Porcentaje acumulado")
+resumen
+```
+
+Hasta la 8 tenemos un 90% de la variabilidad explicada
+
+Contraste de hipótesis para seleccionar el número de componentes principales (bajo hipótesis de normalidad multivariante)
+
+```{r}
+apply(dat[,2:17],2 ,shapiro.test)
+```
+
+Se rechaza normalidad univariante para todas las variables a un nivel de signficación del 5%. No tenemos normalidad multivariante
+
+Coeficientes y correlaciones de las C.P
+
+```{r}
+loadings(acp)[,1:8] #Coeficientes que definen cada combinación lineal, si cogemos las 8 c.p
+```
+
+```{r}
+#para calcular las correlaciones entre las 
+#variables y las componentes
+cor_vc<-loadings(acp)%*%diag(acp$sdev) #coeficientes*desvtipica
+cor_vc[,1:8] # par las 8 comp. principales
+```
+
+```{r}
+#Para ayudar a interpretar las CP:
+plot(cor_vc[,1:2],type="n",
+     main="Partidos 20/21",
+     xlab="C.P. 1",ylab="C.P.2")
+text(cor_vc[,1:2],labels=rownames(cor_vc),
+     col="red",cex=0.6)
+abline(h=0,v=0,lty=1,col="blue")
+abline(v=0.5,lty=2)
+abline(v=-0.5,lty=2)
+abline(h=-0.5,lty=2)
+```
+
+```{r}
+#Para ayudar a interpretar las CP:
+plot(cor_vc[,4:5],type="n",
+     main="Partidos 20/21",
+     xlab="C.P. 4",ylab="C.P.5")
+text(cor_vc[,4:5],labels=rownames(cor_vc),
+     col="red",cex=0.6)
+abline(h=0,v=0,lty=1,col="blue")
+abline(v=0.5,lty=2)
+abline(v=-0.5,lty=2)
+abline(h=-0.5,lty=2)
+```
+
+```{r}
+#Para ayudar a interpretar las CP:
+plot(cor_vc[,c(1,6)],type="n",
+     main="Partidos 20/21",
+     xlab="C.P. 1",ylab="C.P.6")
+text(cor_vc[,c(1,6)],labels=rownames(cor_vc),
+     col="red",cex=0.6)
+abline(h=0,v=0,lty=1,col="blue")
+abline(v=0.5,lty=2)
+abline(v=-0.5,lty=2)
+abline(h=-0.5,lty=2)
+```
+
+No se pueden interpretar bien las componentes principales, luego no nos son útiles para el estudio.
+
+## Modelos estadísticos (con las variables seleccionadas)
+
+### Partición entrenamiento/test
+
+```{r}
+n<- nrow(dat)
+indin<- 1:n
+nent<-ceiling(0.7*n)
+ntest<- n-nent
+set.seed(2468)
+indient<- sort(sample(indin,nent))
+inditest<- setdiff(indin,indient)
+datent<- dat[indient,]
+dattest<- dat[inditest,]
+
+head(dattest,10)
+```
+
+### Regla simple de Bayes
+
+```{r}
+library(e1071) 
+modeloNB<- naiveBayes(`Ganado/Perdido` ~ ., data = datent[,2:18])
+modeloNB       # para cada variable, Media [,1] y s.d [,2] en cada categoria de la variable objetivo
+
+preditestNB<- predict(modeloNB,dattest)
+confutestNB<-table(dattest$`Ganado/Perdido`,preditestNB)
+confutestNB
+AciertoNB=round(100*mean(dattest$`Ganado/Perdido`==preditestNB),2)
+SensEspecNB=round(100*diag(prop.table(confutestNB,1)),2)
+c(AciertoNB,SensEspecNB)
+```
+
+```{r}
+library(ROCR)
+probabi1<- predict(modeloNB,dattest,
+                   type="raw")[,2] #Prob. ganar partido
+prediobj<-prediction(probabi1,dattest$`Ganado/Perdido`)
+plot(performance(prediobj, "tpr","fpr"),
+     main="CoR TEST. Naive Bayes, SPAM",
+     xlab="Tasa de falsos positivos", ylab="Tasa de verdaderos positivos")
+abline(a=0,b=1,col="blue",lty=2)
+aucNB<- as.numeric(performance(prediobj,"auc")@y.values)
+legend("bottomright",legend=paste("AUC=",round(aucNB,3)))
+
+```
+
+Guardamos resultados
+
+```{r}
+Resul=c(Acierto=AciertoNB,AUC=aucNB,SensEspecNB)
+Resul
+```
+
+#### Otra libreria
+
+```{r}
+detach("package:e1071")
+library(naivebayes)
+modeloNB2<- naive_bayes(`Ganado/Perdido` ~ ., data = datent[,2:18],
+                        usekernel=TRUE,kernel ="epanechnikov",bw="nrd0",
+                        usepoisson=T)
+# podemos hacerlo por equipos
+# modeloNB2<- naive_bayes(`Ganado/Perdido` ~ ., data = datent,
+#                         usekernel=TRUE,kernel ="epanechnikov",bw="nrd0",
+#                         usepoisson=T)
+
+#usekernel=TRUE permite estimar la funcion de densidad
+#mediante el metodo nucleo para variables numericas
+#utilizando la funcion density, por defecto nucleo gaussiano
+#y metodo nrd0 para estimar amplitud de ventana
+#usepoisson=TRUE permite estimar la funcion de probabilidad
+#mediante el ajuste de una ley Poisson para variables "integer"
+#por defecto estimadores maxima verosimilitud ver help(naive_bayes)
+#y el documento intro_naivebayes.pdf
+
+summary(modeloNB2) 
+modeloNB2
+```
+
+```{r}
+#Evaluar el rendimiento
+preditestNB2<- predict(modeloNB2,dattest[,2:17])
+confutestNB2<-table(dattest$`Ganado/Perdido`,preditestNB2)
+confutestNB2 
+AciertoNB2=round(100*mean(dattest$`Ganado/Perdido`==preditestNB2),2)
+SensEspecNB2=round(100*diag(prop.table(confutestNB2,1)),2)
+c(AciertoNB2, SensEspecNB2)
+```
+
+```{r}
+probabi2<- predict(modeloNB2,dattest[,2:17],
+                   type="prob")[,2] #Prob. ganado
+prediobj2<-prediction(probabi2,dattest$`Ganado/Perdido`)
+plot(performance(prediobj2, "tpr","fpr"),
+     main="CoR TEST. Naive Bayes (2), Ganar partido",
+     xlab="Tasa de falsos positivos", ylab="Tasa de verdaderos positivos")
+abline(a=0,b=1,col="blue",lty=2)
+aucNB2<- as.numeric(performance(prediobj2,"auc")@y.values)
+legend("bottomright",legend=paste("AUC=",round(aucNB2,3)))
+```
+
+```{r}
+Resul=rbind(Resul,c(AciertoNB2,aucNB2,SensEspecNB2))
+rownames(Resul)=c("Gauss","Kernel(Poisson)")
+Resul
+```
+
+### Análisis discriminante lineal
+
+```{r}
+library(MASS)
+modeloLDA = lda(`Ganado/Perdido` ~. , datent[,2:18])
+modeloLDA
+```
+
+```{r}
+#Coeficientes FLD en cada caso:
+FLD=predict(modeloLDA)$x
+plot(FLD, col = datent[,18]$`Ganado/Perdido`)
+abline(h=0,v=0,lty=3)
+legend("bottomright",col=1:2,lty=1,
+       legend=levels(datent$`Ganado/Perdido`))
+```
+
+```{r}
+preditestLDA=predict(modeloLDA,newdata=dattest[,2:18])$class
+confutestLDA=table(Real=dat[inditest,18]$`Ganado/Perdido`,Predic=preditestLDA)
+confutestLDA
+```
+
+```{r}
+AciertoLDA=round(100*mean(dattest$`Ganado/Perdido`==preditestLDA),2)
+SensEspecLDA=round(100*diag(prop.table(confutestLDA,1)),2)
+c(AciertoLDA, SensEspecLDA)
+```
+
+```{r}
+probabiLDA<- predict(modeloLDA,dattest[,2:17],
+                   type="prob")$posterior[,2] #Prob. ganado
+prediobjLDA<-prediction(probabiLDA,dattest$`Ganado/Perdido`)
+plot(performance(prediobjLDA, "tpr","fpr"),
+     main="CoR TEST. Analisis disc. Lineal, Ganar partido",
+     xlab="Tasa de falsos positivos", ylab="Tasa de verdaderos positivos")
+abline(a=0,b=1,col="blue",lty=2)
+aucLDA<- as.numeric(performance(prediobjLDA,"auc")@y.values)
+legend("bottomright",legend=paste("AUC=",round(aucLDA,3)))
+```
+
+```{r}
+Resul=rbind(Resul,c(AciertoLDA,aucLDA,SensEspecLDA))
+rownames(Resul)=c("Gauss","Kernel(Poisson)","LDA")
+Resul
+```
+
+### Regresión Logística
+
+```{r}
+modeloRL<- glm(`Ganado/Perdido`~.,family=binomial,data=datent[,2:18])
+summary(modeloRL)
+```
+
+Vemos que todos los coeficientes asociados a las variables (y el termino independiente) no son significativos al 5%, excepto las variables `Saque-Tot` (0.03686) y `Recep-Tot` (0.00955)
+
+```{r}
+# Vamos a ver si el modelo nos sirve para ajustar estos datos
+library(generalhoslem)
+prob=fitted(modeloRL)   #probabilidades estimadas por el modelo
+HS=logitgof(datent$`Ganado/Perdido`, prob,g=10) 
+#Nos queda un p-valor de 0.5358, luego podemos concluir que el modelo proporciona un buen ajuste.
+```
+
+Modelo con las variables `Saque-Tot` y `Recep-Tot`
+
+```{r}
+modeloRL1<- glm(`Ganado/Perdido`~.,family=binomial,data=datent[c("Saque-Tot","Recep-Tot","Ganado/Perdido")])
+summary(modeloRL1)
+```
+
+```{r}
+modeloRL1
+```
+
+**Ganado/Perdido = -3.5407 + Saque-Tot \* 0.3841 + Recep-Tot \* -0.3897**
+
+```{r}
+preditestRL=as.numeric(predict(modeloRL1,dat[inditest,], type="response")>0.5)
+confutestRL<-table(Real=dat[inditest,18]$`Ganado/Perdido`,Predic=preditestRL)
+confutestRL
+AciertoRL=round(100*mean(as.numeric(dattest$`Ganado/Perdido`)==(preditestRL+1)),2)
+SensEspecRL=round(100*diag(prop.table(confutestRL,1)),2)
+c(AciertoRL, SensEspecRL)
+```
+
+```{r}
+probabiRL<- predict(modeloRL1,dat[inditest,],type="response") #Prob. 1
+prediobjRL<-prediction(probabiRL,dat[inditest,18])
+plot(performance(prediobjRL, "tpr","fpr"),
+     main="COR TEST. Regresion Logistica",
+     xlab="Tasa de falsos positivos", 
+     ylab="Tasa de verdaderos positivos")
+abline(a=0,b=1,col="blue",lty=2)
+aucRL<- as.numeric(performance(prediobjRL,"auc")@y.values)
+legend("bottomright",legend=paste("AUC=",round(aucRL,3)))
+```
+
+```{r}
+Resul=rbind(Resul,c(AciertoRL,aucRL,SensEspecRL))
+rownames(Resul)=c("Gauss","Kernel(Poisson)","LDA","R.Logistica")
+Resul
+```
+
+```{r}
+levels(dat$`Ganado/Perdido`)=c("Perdido","Ganado")
+levels(dattest$`Ganado/Perdido`)=c("Perdido","Ganado")
+levels(datent$`Ganado/Perdido`)=c("Perdido","Ganado")
+```
+
+### Redes Neuronales
+
+```{r}
+library(NeuralNetTools) #para representar graficamente
+library(caret)
+ctrlRD <- trainControl(method="cv",classProbs = T,
+                     summaryFunction = twoClassSummary, verboseIter = F)
+
+modeloPM <- train(`Ganado/Perdido`~ ., data = datent[,-1], 
+                  method = "nnet", 
+                  trControl = ctrlRD,
+                  preProcess =c("center","scale"),
+     tuneGrid=expand.grid(size=1:18,decay=c(0,0.05,0.1)))
+```
+
+```{r, message=FALSE}
+modeloPM 
+modeloPM$finalModel
+summary(modeloPM)
+# modeloPM$results
+```
+
+```{r}
+preditestPM= predict(modeloPM,dattest[,-18])
+confutestPM=table(RealPM_test=dattest[,18]$`Ganado/Perdido`,
+                PredPM_test=preditestPM)
+kableExtra::kable(confutestPM) %>%
+ add_header_above(c("", "Predicción" =2)) %>% 
+  group_rows("Real", 1, 2)
+```
+
+```{r}
+AciertoPM=round(100*mean(dattest$`Ganado/Perdido`==preditestPM),2)
+SensEspecPM=round(100*diag(prop.table(confutestPM,1)),2)
+c(AciertoPM, SensEspecPM)
+```
+
+```{r}
+probabiPM= predict(modeloPM,newdata = dat[inditest,2:17] , 
+                   type="prob")[,1] #Prob. ganar
+prediobjPM=prediction(probabiPM,dat[inditest,18])
+plot(performance(prediobjPM, "tpr","fpr"),
+     main="COR TEST. PM, Partidos",
+     xlab="Tasa de falsos positivos", 
+     ylab="Tasa de verdaderos positivos")
+abline(a=0,b=1,col="blue",lty=2)
+aucPM= as.numeric(performance(prediobjPM,"auc")@y.values)
+legend("bottomright",legend=paste("AUC=",round(aucPM,3)))
+```
+
+```{r}
+Resul=rbind(Resul,c(AciertoPM,aucPM,SensEspecPM))
+rownames(Resul)=c("Gauss","Kernel(Poisson)","LDA","R.Logistica","Perceptron Multicapas")
+Resul
+```
+#### DIBUJO DE LA RED NEURONAL E IMPORTANCIA DE LAS VARIABLES
+
+```{r}
+# plotnet(modeloPM) 
+#negro: valores positivos; gris: negativos
+#podemos establecer colores:
+plotnet(modeloPM,pos_col='darkblue',neg_col='darkred')
+
+neuralweights(modeloPM$finalModel) #coeficientes estimados
+garson(modeloPM) #Importancia relativa de las variables de entrada en redes
+# neuronales utilizando el algoritmo de Garson
+olden(modeloPM) # Importancia relativa de las variables de entrada en las
+# redes neuronales como la suma del producto de los pesos de conexion de 
+# entrada oculta, salida oculta, propuesta por Olden et al. 2004.
+# help(garson)
+# help(olden)
+garson(modeloPM,bar_plot=FALSE) #estimaciones sin dibujar
+#suman 1
+sum(garson(modeloPM,bar_plot=FALSE))
+
+
+```
+
+
+
+### Vectores soporte
+
+Vamos a ver si la muestra está balanceada
+
+```{r}
+table(datent$`Ganado/Perdido`) # datos no balanceados
+```
+
+Vamos a hacerlo con la librería caret.
+
+```{r}
+#Definir opciones para train
+ctrl <- trainControl(method="cv",classProbs=TRUE,
+                     summaryFunction = twoClassSummary)
+
+modeloSVM <- train(`Ganado/Perdido` ~ ., data = datent[,2:18], 
+                   method = "svmRadial", 
+                   trControl = ctrl, 
+                   preProcess = "range", 
+                   rangeBounds	=c(0,1),
+                   tuneGrid = expand.grid(C=c(0.1,1,5,10,50),
+                                          sigma=c(0.025,0.035,0.5)) )
+modeloSVM
+```
+
+
+```{r}
+predictestSVM<- predict(modeloSVM,dattest[,2:17])
+confutestSVM<-table(Real=dattest$`Ganado/Perdido`,
+                 Predicción=predictestSVM)
+confutestSVM
+```
+
+```{r}
+AciertoSVM=round(100*mean(dattest$`Ganado/Perdido`==predictestSVM),2)
+SensEspecSVM=round(100*diag(prop.table(confutestSVM,1)),2)
+c(AciertoSVM, SensEspecSVM)
+```
+
+```{r}
+probabiSVM= predict(modeloSVM,newdata = dat[inditest,2:17] , 
+                   type="prob")[,1] #Prob. ganar
+prediobjSVM=prediction(probabiSVM,dat[inditest,18])
+plot(performance(prediobjSVM, "tpr","fpr"),
+     main="COR TEST. SVM, Partidos",
+     xlab="Tasa de falsos positivos", 
+     ylab="Tasa de verdaderos positivos")
+abline(a=0,b=1,col="blue",lty=2)
+aucSVM= as.numeric(performance(prediobjSVM,"auc")@y.values)
+legend("bottomright",legend=paste("AUC=",round(aucSVM,3)))
+```
+
+```{r}
+Resul=rbind(Resul,c(AciertoSVM,aucSVM,SensEspecSVM))
+rownames(Resul)=c("Gauss","Kernel(Poisson)","LDA","R.Logistica","Perceptron Multicapas", "Vectores soporte")
+Resul
+```
+
+Dibujar las clases 
+
+```{r}
+ggplot() +
+  geom_point(data = dat, aes(x = `Ataque-Tot`, y = G, color = `Ganado/Perdido`), size = 4) 
+```
+
+
+
+Vamos a utilizar la técnica UPSAMPLE: se muestrea con reemplazamiento en la clase minoritaria para igualar el número de casos de la clase mayoritaria. Comparamos los dos modelos puesto que las muestras no son balanceadas por un registro.
+
+```{r}
+upSampled_train = upSample(datent[, 2:17], 
+                           datent$`Ganado/Perdido`)
+dim(upSampled_train)
+table(upSampled_train$Class)
+names(upSampled_train)[17]= "Ganado/Perdido"
+```
+
+```{r}
+ctrl5 = trainControl(method = "cv",
+                     number=5,
+                    classProbs = TRUE,
+                    summaryFunction = twoClassSummary)
+
+SVMUp=train(`Ganado/Perdido` ~ ., 
+            data = upSampled_train,
+            method = "svmRadial", 
+            preProcess = "range", 
+            rangeBounds =c(0,1),
+            tuneLength=10,
+            trControl = ctrl5,
+            tuneGrid = expand.grid(C=c(0.1,1,5,10,50),
+                                          sigma=c(0.025,0.035,0.05)),
+            metric="Sens")
+SVMUp
+```
+
+Evaluamos el modelo
+
+```{r}
+predictestUp = predict(SVMUp, dattest[,2:17])
+
+confutestSVM_up<-table(Real=dattest$`Ganado/Perdido`,
+                 Pred=predictestUp)
+confutestSVM_up
+```
+
+```{r}
+AciertoSVM_up=round(100*mean(dattest$`Ganado/Perdido`==predictestUp),2)
+SensEspecSVM_up=round(100*diag(prop.table(confutestSVM_up,1)),2)
+c(AciertoSVM_up, SensEspecSVM_up)
+```
+
+```{r}
+probabiSVM_up= predict(SVMUp,newdata = dat[inditest,2:17] , 
+                   type="prob")[,1] #Prob. ganar
+prediobjSVM_up = prediction(probabiSVM_up,dat[inditest,18])
+plot(performance(prediobjSVM_up, "tpr","fpr"),
+     main="COR TEST. SVM UPSAMPLING",
+     xlab="Tasa de falsos positivos", 
+     ylab="Tasa de verdaderos positivos", col="green")
+abline(a=0,b=1,col="blue",lty=2)
+aucSVM_up = as.numeric(performance(prediobjSVM_up,"auc")@y.values)
+legend("bottomright",legend=paste("AUC=",round(aucSVM_up,3)))
+```
+
+```{r}
+Resul=rbind(Resul,c(AciertoSVM_up,aucSVM_up,SensEspecSVM_up))
+rownames(Resul)=c("Gauss","Kernel(Poisson)","LDA","R.Logistica","Perceptron Multicapas", "Vectores soporte","Vectores soporte con Upsampling")
+Resul
+```
+
+### Árbol de clasificación
+
+```{r}
+library(rpart) 
+library(graphics)
+modeloAB <- rpart(`Ganado/Perdido` ~ ., 
+                    data=datent[,2:18],method="class")
+modeloAB
+```
+
+```{r}
+# summary(modeloAB)
+modeloAB$parms #probabilidades a priori, costes
+modeloAB$variable.importance
+```
+
+```{r}
+plot(modeloAB,main="Arbol de clasificacion",compress=TRUE)
+text(modeloAB,col="blue")
+```
+
+```{r}
+plotcp(modeloAB) # tamaños
+plotcp(modeloAB,upper = c("splits"),lty = 10,col=3) # numero de divisiones
+```
+
+```{r}
+printcp(modeloAB)
+```
+
+```{r}
+predictestAB <- predict(modeloAB,type="class", dattest[,2:17])
+confutestAB<-table(dattest$`Ganado/Perdido`,predictestAB,deparse.level = 2)
+confutestAB
+```
+
+```{r}
+AciertoAB=round(100*mean(dattest$`Ganado/Perdido`==predictestAB),2)
+SensEspecAB=round(100*diag(prop.table(confutestAB,1)),2)
+c(AciertoAB, SensEspecAB)
+```
+
+```{r}
+probabiAB= predict(modeloAB,newdata = dat[inditest,2:17] , 
+                   type="prob")[,1] 
+prediobjAB = prediction(probabiAB,dat[inditest,18])
+plot(performance(prediobjAB, "tpr","fpr"),
+     main="COR TEST. SVM UPSAMPLING",
+     xlab="Tasa de falsos positivos", 
+     ylab="Tasa de verdaderos positivos")
+abline(a=0,b=1,col="blue",lty=2)
+aucAB = as.numeric(performance(prediobjAB,"auc")@y.values)
+legend("bottomright",legend=paste("AUC=",round(aucAB,3)))
+```
+
+# Conclusiones
+
+```{r}
+Resul=rbind(Resul,c(AciertoAB,aucAB,SensEspecAB))
+rownames(Resul)=c("Gauss","Kernel(Poisson)","LDA","R.Logistica","Perceptron Multicapas", "Vectores soporte","Vectores soporte con Upsampling", "Arbol de clasificacion")
+Resul
+```
+
+```{r}
+library(pROC)
+ROCtestNB1 = roc(dattest$`Ganado/Perdido`, probabi1)
+ROCtestNB2 = roc(dattest$`Ganado/Perdido`, probabi2)
+ROCtestLDA = roc(dattest$`Ganado/Perdido`, probabiLDA)
+ROCtestPM = roc(dattest$`Ganado/Perdido`, probabiPM)
+ROCtestSVM = roc(dattest$`Ganado/Perdido`, probabiSVM)
+ROCtestUp = roc(dattest$`Ganado/Perdido`, probabiSVM_up)
+ROCtestAB = roc(dattest$`Ganado/Perdido`, probabiAB)
+```
+
+```{r}
+plot(ROCtestNB1,col=1,lwd=2,main="ROC modelos")
+lines(ROCtestNB2,col=2,lwd=2)
+lines(ROCtestLDA,col=3,lwd=2)
+lines(ROCtestPM,col=4,lwd=2)
+lines(ROCtestSVM,col=5,lwd=2)
+lines(ROCtestUp,col=6,lwd=2)
+lines(ROCtestAB,col=7,lwd=2)
+legend(x = "bottomright", legend = c("N.Bayes 1", "N.Bayes 2", "A. Discrim. Lineal", "Perceptron multicapas", "Vectores soporte", "V.sop upsampling", "Arbol clasific."), fill = 1:7, cex=0.7)
+
+```

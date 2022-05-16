@@ -8,6 +8,7 @@ bibliography:
 - bib/library.bib
 - bib/paquetes.bib
 - bib/articulos.bib
+- bib/paginas.bib
 metodobib: yes
 biblio-style: plainnat
 csl: acm-sig-proceedings-long-author-list.csl
@@ -21,6 +22,7 @@ output:
     template: latex/templateMemoriaTFE.tex
     includes:
       before_body: portadas/latex_paginatitulo_modTFDGME.tex
+  word_document: default
   html_document:
     df_print: paged
 ---
@@ -31,7 +33,7 @@ output:
 ---
 nocite: | 
   @marelic1998influence, @akarccecsme2017possible,@sanjurjo2015analisis,
-  @gabrio2021bayesian
+  @gabrio2021bayesian, @federacionvoleibol2021, @accionestecnicas
 ...
 
 
@@ -200,6 +202,6 @@ install.packages(c("ggplot2","kableExtra","dplyr"))
 
 <!-- \nocite{*} -->
 \nocite{
-marelic1998influence,akarccecsme2017possible,sanjurjo2015analisis,gabrio2021bayesian}
+marelic1998influence,akarccecsme2017possible,sanjurjo2015analisis,gabrio2021bayesian,federacionvoleibol2021, accionestecnicas}
 
 \fi 

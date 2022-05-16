@@ -1,0 +1,268 @@
+---
+title: "DatosCap3"
+author: "Ana Solís García"
+date: "5/4/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Datos de la Liga Iberdrola 2018/2019 (https://rfevb-web.dataproject.com/Statistics.aspx?ID=49&PID=80&mn=23)
+
+Datos de la Liga Iberdrola 2020/2021 (https://rfevb-web.dataproject.com/Statistics.aspx?ID=68&PID=102) 
+
+
+## Liga 2018/2019
+
+```{r}
+library(readxl)
+# cargamos los datos por equipos de la temporada 18/19
+datosequipos_18_19 = read_excel("EstadisticasPorEquipos18_19.xlsx", sheet=2, range= "A4:AA16", col_names=T)
+head(datosequipos_18_19)
+```
+
+```{r}
+str(datosequipos_18_19)
+```
+
+
+
+### Introduccion de la variable respuesta
+
+
+**CAMBIOS**
+Ponemos como nombre de los registros los nombres de los equipos
+Quitamos las variables Partidos, Sets, G-P y Bloqueo-Red
+
+```{r}
+equipos=datosequipos_18_19$Equipo
+dat=data.frame(datosequipos_18_19[,-1])
+rownames(dat)=equipos
+#cambiamos el nombre de las variables que estaban en porcentaje
+```
+
+
+Queremos que la variable respuesta sea *Y="Clasificación para play-offs"* 
+
+```{r}
+clasificacion=c(rep(1,4),rep(0,8))
+clasificacion
+datos=cbind("Clasificacion P-O"=clasificacion,dat)
+datos
+datos$`Clasificacion P-O` <- factor(datos$`Clasificacion P-O`, levels = c("0", "1"), labels = c("Nojuega", "Sijuega"))
+```
+
+
+
+Ahora podemos utilizar entonces los datos para hacer el estudio 
+
+```{r}
+str(datos)
+```
+Tenemos 27 variables, de las cuales 26 son de tipo numérico y 1 de tipo factor con niveles *Nojuega*/*Sijuega* que indica si el equipo llega a jugar en la fase de Play-offs o no. 
+
+```{r}
+summary(datos)
+```
+*Quitar las variables que no nos hacen falta: partidos, G.P, Bloqueo.Red*
+
+### Boxplot
+
+Como las variables están relacionadas con las distintas acciones técnico-tácticas, vamos a observar las variables en distintos grupos
+
+- Relacionadas con los puntos 
+
+```{r}
+# variables P.total, BreakPoint, Ganados
+ # datos[,5]+datos[,6]==datos[,4]
+par(mfrow=c(1,2))
+boxplot(datos[,4], main="Puntos totales")
+boxplot(datos[,5:6])
+par(mfrow=c(1,1))
+```
+
+- Saque (de la 9 a la 13)
+
+```{r}
+par(mfrow=c(1,2))
+boxplot(datos[,8], main="Saques totales", col="red")
+boxplot(datos[,9:10], col="red")
+par(mfrow=c(1,1))
+```
+
+
+Para las variables *Saque.Pts.por.set* y *Saque.Efic* tenemos la proporción de puntos por cada set y la eficiencia del saque por parte de cada uno de los equipos.
+
+```{r}
+summary(datos[,11:12])
+```
+El máximo de puntos por set ha sido de 1.7 que corresponde al Avarca de Menorca y el mínimo ha sido de 0.8 correspondiente a Emevé.
+
+
+- Recepción
+
+```{r}
+par(mfrow=c(1,2))
+boxplot(datos[,13], main="Recepciones totales", col="green")
+boxplot(datos[,14:16], col="green")
+par(mfrow=c(1,1))
+```
+
+
+- Ataque
+
+- Bloqueo
+
+### Correlación entre las variables
+
+
+```{r}
+pairs(dat)
+cor(dat)
+```
+
+
+```{r}
+str(datos)
+```
+
+```{r}
+datos$`Clasificacion P-O`=as.factor(datos$`Clasificacion P-O`)
+datos$`Clasificacion P-O`= relevel(datos$`Clasificacion P-O`, ref = "Sijuega")
+str(datos)
+#ya tenemos la variable respuesta en factor con niveles 1=sijuega y 2=nojuega
+```
+
+
+### Estudio de las variables 
+
+```{r}
+# el estudio de la colinealidad se hace sin las variables cualitativas, no hay
+```
+
+## Modelos de clasificación
+
+### Partición ent/test
+
+```{r}
+dim(datos)
+n<-nrow(datos)
+set.seed(12345)
+# Partición entrenamiento, validación y test
+indices<- 1:n
+inditest<- sample(indices,trunc(n*0.30)+1)
+indient<-setdiff(indices,inditest)
+
+datosent<-datos[indient,]  #conjunto entrenamiento
+datostest<-datos[inditest,]  #conjunto test
+```
+
+
+#### Modelo con regla simple de Bayes
+
+```{r}
+library(naivebayes)
+modeloNB <- naive_bayes(`Clasificacion P-O`~ ., data = datos[indient,] )
+summary(modeloNB)
+```
+
+Las probabilidades a priori son: Sijuega -> 0.375,  Nojuega -> 0.625
+
+
+```{r}
+tables(modeloNB)
+```
+
+```{r}
+preditest<- predict(modeloNB,datos[inditest,-1])
+confutest<-table(Real=datos[inditest,1],PredicNB=preditest)
+confutest
+```
+```{r}
+AciertoNB= round(100*mean(datos[inditest,1]==preditest),2)
+SensEspecNB= round(100*diag(prop.table(confutest,1)),2)
+AciertoNB
+SensEspecNB
+```
+```{r}
+library(ROCR)
+#Curva ROC (primer modelo: Naive-Bayes)
+probabi<- predict(modeloNB,datos[inditest,-1],
+                  type="prob")[,2] 
+prediobj<-prediction(probabi,datos[inditest,1])
+plot(performance(prediobj, "tpr","fpr"),
+     main="COR TEST. Naive Bayes, Patentes",
+     xlab="Tasa de falsos positivos", ylab="Tasa de verdaderos positivos")
+abline(a=0,b=1,col="blue",lty=2)
+aucNB<- as.numeric(performance(prediobj,"auc")@y.values)
+legend("bottomright",legend=paste("AUC=",round(aucNB,3)))
+```
+
+
+
+
+### Analisis discrminante lineal
+
+```{r}
+library(MASS)
+modeloADL=lda(`Clasificacion P-O`~. ,datos[,-2]) #quitamos la variable partidos porque es constante para todos los grupos
+modeloADL
+table(datos$`Clasificacion P-O`,predict(modeloADL)$class)
+# erroremp<- mean(cats$Sex!=predict(cats.lda)$class)
+# cat("Error empirico=",100*erroremp ,"% \n")
+
+# con validacion cruzada
+modeloADL_CV=lda(`Clasificacion P-O`~.,datos, CV=T)
+```
+
+### Modelo regresión logística
+
+```{r}
+modelo<- glm(`Clasificacion P-O`~.,family=binomial,data=datos[indient,])
+summary(modelo)
+```
+
+### KNN
+
+```{r}
+library(class)
+prediccionKNN <- knn(datos[indient,-1],datos[inditest,-1],
+                 cl = datos[indient,1],
+                 k=1, prob=T )
+prediccionKNN
+summary(prediccionKNN)
+#matriz de confusion
+matrizConfusion <- table(datostest$`Clasificacion P-O`, prediccionKNN)
+matrizConfusion
+
+#SENS/ESPEC/ACIERTO
+AciertoKNN= round(100*mean(datos[inditest,1]==prediccionKNN),2)
+SensEspecKNN= round(100*diag(prop.table(matrizConfusion,1)),2)
+AciertoKNN
+SensEspecKNN
+
+# library(ROCR)
+pred1 <- prediction(as.numeric(prediccionKNN), as.numeric(datos[inditest,]$`Clasificacion P-O`))
+perf1 <- performance(pred1, "tpr", "fpr")
+plot(perf1)
+
+# library(caret)
+# ctrl <- trainControl(method="cv",      # indicamos validacion cruzada
+#                      classProbs=TRUE,  # para que el metodo que hagamos obtenga estimaciones de probabilidad
+#                      summaryFunction = twoClassSummary)
+# 
+# modeloKNN <- train(`Clasificacion P-O` ~ .,                        
+#                    data = datos[indient,],          
+#                    method = "knn",                 
+#                    trControl = ctrl,                
+#                    preProcess =c("center","scale"), # transformar las variables predictoras (preprocesamiento). Center y scale (centrar por su media y dividir por su des. tipica)
+#                    tuneLength=11 )
+```
+
+
+```{r}
+```
+
